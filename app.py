@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 from flask import Flask, request, abort
 
 from linebot import (
@@ -47,7 +50,13 @@ def callback():
     try:
         handler.handle(body, signature)
     except InvalidSignatureError:
+        print(traceback.format_exc())
+        print("Invalid signature. Please check your channel access token and secret.")
         abort(400)
+    except Exception as e:
+        print(traceback.format_exc())
+        print(f"An error occurred: {e}")
+        abort(500)
     return 'OK'
 
 
