@@ -2,6 +2,9 @@
 .env
 .env.*
 
+# Firebase
+diabetes-mellitus-linebot-firebase-adminsdk-ql11b-2243e5dfb7.json
+
 # Python
 __pycache__/
 *.py[cod]
