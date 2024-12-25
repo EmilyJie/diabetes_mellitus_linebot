@@ -12,6 +12,8 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 import time
 
+static_tmp_path = os.path.join(os.path.dirname(__file__), 'static', 'tmp')
+
 # Initialize Flask App
 app = Flask(__name__)
 
