@@ -12,22 +12,22 @@ This project develops an interactive LINE Bot with generative AI capabilities to
 
 ### Phase 1 (1 month) | 第一階段（1 個月）
 
--   Participants maintain their regular dietary habits
+-   Participants maintain their regular dietary habits\
     受測者維持原本的日常飲食習慣
--   Daily reminder at 7:00 PM to record dietary intake
+-   Daily reminder at 7:00 PM to record dietary intake\
     每日晚上 7:00 提醒記錄當天飲食內容
--   Access to educational materials about diabetes self-management through image-based forms
+-   Access to educational materials about diabetes self-management through image-based forms\
     可使用圖文表單了解糖尿病自我管理相關知識
 
 ### Phase 2 (Intervention, 1 month) | 第二階段（干預期，1 個月）
 
--   Daily reminder at 7:00 AM to discuss daily meal planning
+-   Daily reminder at 7:00 AM to discuss daily meal planning\
     每日早上 7:00 提醒討論當天飲食計畫
--   Daily reminder at 7:00 PM to record dietary intake and self-management satisfaction
+-   Daily reminder at 7:00 PM to record dietary intake and self-management satisfaction\
     每日晚上 7:00 提醒記錄當天飲食內容以及對自己當天的健康管理滿意度
--   Access to educational materials about diabetes self-management
+-   Access to educational materials about diabetes self-management\
     可使用圖文表單了解糖尿病自我管理相關知識
--   Daily self-management satisfaction rating (Scale 1-10)
+-   Daily self-management satisfaction rating (Scale 1-10)\
     每日健康管理滿意度評分（1-10 分）
 
 ## 🛠 Development Setup | 開發環境設定
@@ -100,9 +100,9 @@ ngrok http 5000
 
 ### Environment Setup Notes | 環境設定注意事項
 
--   Make sure to keep your Python environment isolated using Anaconda
+-   Make sure to keep your Python environment isolated using Anaconda\
     請使用 Anaconda 保持 Python 環境的獨立性
--   The ngrok URL changes every time you restart ngrok (unless you have a paid account)
+-   The ngrok URL changes every time you restart ngrok (unless you have a paid account)\
     每次重啟 ngrok 時，URL 都會改變（除非使用付費帳號）
--   Remember to update the webhook URL in LINE Developer Console whenever the ngrok URL changes
+-   Remember to update the webhook URL in LINE Developer Console whenever the ngrok URL changes\
     記得在 ngrok URL 改變時更新 LINE Developer Console 的 webhook URL
