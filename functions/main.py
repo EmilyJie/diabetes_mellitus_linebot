@@ -85,11 +85,11 @@ def run_assistant(thread_id):
         run_status = client.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run.id)
         if run_status.status == 'completed':
             break
-        elif run_status.status in ['failed']:
-            raise Exception("Assistant run failed.")
         elif run_status.status == 'cancelled':
             print(f"Run {run.id} was cancelled.")
             return "CANCELLED"
+        elif run_status.status in ['failed']:
+            raise Exception("Assistant run failed.")
         time.sleep(1)  # Add delay to avoid excessive requests
         timeout_counter += 1
         if timeout_counter > MAX_RETRIES:
@@ -98,18 +98,6 @@ def run_assistant(thread_id):
     # Get reply message
     messages = client.beta.threads.messages.list(thread_id=thread_id)
     return messages.data[0].content[0].text.value
-
-
-def cancel_run(thread_id):
-    try:
-        runs = client.beta.threads.runs.list(thread_id=thread_id)
-        active_runs = [run for run in runs.data if run.status in ['in_progress', 'queued']]
-
-        for run in active_runs:
-            client.beta.threads.runs.cancel(thread_id=thread_id, run_id=run.id)
-            print(f"Cancelled run {run.id} in thread {thread_id}")
-    except Exception as e:
-        print(f"Failed to cancel ongoing run: {e}")
 
 
 def remove_markdown(text):
@@ -154,7 +142,7 @@ def linebot(req: https_fn.Request) -> https_fn.Response:
     
     return https_fn.Response(response="OK", status=200)
 
-# Keep the existing handler decorators and functions
+# Handle user message
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     user_id = event.source.user_id
@@ -163,6 +151,21 @@ def handle_message(event):
     user_message = event.message.text
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     current_date = datetime.now().strftime("%Y/%m/%d")
+    print(event.message)
+
+    # If user message contains "聯繫研究人員", return contact information
+    if user_message == "聯繫研究人員":
+        contact_info = "歡迎來信或電話聯絡：\n研究人員 - 揭宜蓁\n📧：112462014@g.nccu.edu.tw\n📞：0981781366"
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=contact_info)
+        )
+        return;
+
+    # If user message is a Line emoji, return nothing
+    if hasattr(event.message, 'emojis') and event.message.emojis and re.match(r'^\(.*\)$', user_message):
+        print(f"Received emoji-only message: {user_message}")
+        return;
 
     # Check if user message is "今日飲食規劃" or "今日飲食記錄"
     if user_message == "今日飲食規劃":
@@ -177,7 +180,6 @@ def handle_message(event):
         # Initialize messages list
         messages = []
         is_processing = False
-        previous_unprocessed_message = ""
         
         if user_doc.exists:
             # If user exists, get thread_id and update messages
@@ -185,13 +187,20 @@ def handle_message(event):
             thread_id = user_data.get('thread_id')
             is_processing = user_data.get('is_processing', False)
             messages = user_data.get('messages', [])
+            pending_messages = user_data.get('pending_messages', [])
 
             if is_processing:
-                cancel_run(thread_id)
-                previous_messages = [msg['content'] for msg in messages if msg['role'] == 'user']
-                previous_unprocessed_message = previous_messages[-1] if previous_messages else ""
-                # Add previous unprocessed message to user message
-                user_message = f"{previous_unprocessed_message}\n{user_message}"
+                pending_messages.append({
+                    'role': 'user',
+                    'content': user_message,
+                    'create_at': current_time
+                })
+                user_ref.update({
+                    'pending_messages': pending_messages,
+                    'last_active': firestore.SERVER_TIMESTAMP
+                })
+                print("Pending message added")
+                return
         else:
             # If user does not exist, create a new thread
             thread_id = create_thread()
@@ -204,7 +213,8 @@ def handle_message(event):
                     'display_name': display_name,
                     'language': profile.language if hasattr(profile, 'language') else 'zh-Hant'
                 },
-                'messages': []
+                'messages': [],
+                'pending_messages': []
             })
 
         # Update user message status
@@ -213,14 +223,12 @@ def handle_message(event):
             'last_active': firestore.SERVER_TIMESTAMP,
         })
         
-        # Add user message
+        # Immediately update Firestore with user message
         messages.append({
             'role': 'user',
             'content': user_message,
             'create_at': current_time
         })
-        
-        # Immediately update Firestore with user message
         user_ref.update({
             'messages': messages,
             'last_active': firestore.SERVER_TIMESTAMP
@@ -230,9 +238,6 @@ def handle_message(event):
         add_message_to_thread(thread_id, user_message)
         assistant_reply = run_assistant(thread_id)
         assistant_reply = remove_markdown(assistant_reply)
-
-        if assistant_reply == "CANCELLED":
-            return
         
         # Add assistant reply
         messages.append({
@@ -241,9 +246,28 @@ def handle_message(event):
             'create_at': current_time
         })
 
+        pending_messages = user_ref.get().to_dict().get('pending_messages', [])
+        if pending_messages:
+            combined_message = "\n".join([msg['content'] for msg in pending_messages])
+            add_message_to_thread(thread_id, combined_message)
+            assistant_reply = run_assistant(thread_id)
+            assistant_reply = remove_markdown(assistant_reply)
+            messages.append({
+                'role': 'user',
+                'content': combined_message,
+                'create_at': current_time
+            })
+            messages.append({
+                'role': 'assistant',
+                'content': assistant_reply,
+                'create_at': current_time
+            })
+            pending_messages = []
+
         # Update with new message
         user_ref.update({
             'messages': messages,
+            'pending_messages': pending_messages,
             'last_active': firestore.SERVER_TIMESTAMP,
             'is_processing': False
         })
