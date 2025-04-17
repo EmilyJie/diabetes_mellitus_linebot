@@ -7,7 +7,7 @@ from datetime import datetime
 # LineBot import
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
-from linebot.models import (MessageEvent, TextMessage, TextSendMessage, PostbackEvent)
+from linebot.models import (MessageEvent, TextMessage, TextSendMessage, PostbackEvent, PostbackAction,URIAction, MessageAction, TemplateSendMessage, ButtonsTemplate)
 
 # OpenAI import
 from openai import OpenAI
@@ -306,3 +306,22 @@ def handle_message(event):
 @handler.add(PostbackEvent)
 def handle_postback(event):
     print(event.postback.data)
+
+
+line_bot_api.push_message('U4af49806ea6bd7091f71f792a2f3247c', TemplateSendMessage(
+    alt_text='ButtonsTemplate',
+    template=ButtonsTemplate(
+        thumbnail_image_url='https://firebasestorage.googleapis.com/v0/b/diabetes-mellitus-linebot.firebasestorage.app/o/Linebot%2F%E7%B3%96%E5%B0%BF%E7%97%85%E6%82%A3%E9%A3%B2%E9%A3%9F.png?alt=media&token=195fd80f-bfb9-48e6-9528-8dd739b3c0b9',
+        title='糖尿病患的飲食',
+        actions=[
+            PostbackAction(
+                label='糖尿病飲食原則',
+                data='糖尿病飲食原則'
+            ),
+            PostbackAction(
+                label='低升糖飲食原則',
+                data='低升糖飲食原則'
+            ),  
+        ]
+    )
+))
