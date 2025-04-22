@@ -7,7 +7,7 @@ from datetime import datetime
 # LineBot import
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
-from linebot.models import (MessageEvent, TextMessage, TextSendMessage, PostbackEvent, PostbackAction,URIAction, MessageAction, TemplateSendMessage, ButtonsTemplate)
+from linebot.models import (MessageEvent, TextMessage, TextSendMessage, PostbackEvent, PostbackAction, TemplateSendMessage, ButtonsTemplate, FlexSendMessage, BubbleContainer, BoxComponent, TextComponent, SeparatorComponent, Span)
 
 # OpenAI import
 from openai import OpenAI
@@ -160,12 +160,41 @@ def handle_message(event):
             event.reply_token,
             TextSendMessage(text=contact_info)
         )
-        return;
+        return
+    
+    # 處理「飲食小知識專區」關鍵字
+    elif user_message == "飲食小知識專區":
+        line_bot_api.reply_message(
+            event.reply_token,
+            TemplateSendMessage(
+                alt_text='糖尿病飲食小知識',
+                template=ButtonsTemplate(
+                    thumbnail_image_url='https://firebasestorage.googleapis.com/v0/b/diabetes-mellitus-linebot.firebasestorage.app/o/Linebot%2F%E7%B3%96%E5%B0%BF%E7%97%85%E6%82%A3%E9%A3%B2%E9%A3%9F.png?alt=media&token=195fd80f-bfb9-48e6-9528-8dd739b3c0b9',
+                    title='糖尿病飲食小知識',
+                    text='了解糖尿病飲食相關知識',
+                    actions=[
+                        PostbackAction(
+                            label='糖尿病飲食原則',
+                            data='糖尿病飲食原則'
+                        ),
+                        PostbackAction(
+                            label='六大類食物與代換原則',
+                            data='六大類食物與代換原則'
+                        ),
+                        PostbackAction(
+                            label='低醣飲食原則',
+                            data='低醣飲食原則'
+                        )
+                    ]
+                )
+            )
+        )
+        return
 
     # If user message is a Line emoji, return nothing
     if hasattr(event.message, 'emojis') and event.message.emojis and re.match(r'^\(.*\)$', user_message):
         print(f"Received emoji-only message: {user_message}")
-        return;
+        return
 
     # Check if user message is "今日飲食規劃" or "今日飲食記錄"
     if user_message == "今日飲食規劃":
@@ -305,23 +334,256 @@ def handle_message(event):
 
 @handler.add(PostbackEvent)
 def handle_postback(event):
-    print(event.postback.data)
+    data = event.postback.data
+    
+    # 處理不同的 postback 資料
+    if data == "糖尿病飲食原則":
+        # --- Create Flex Message ---
+        bubble = BubbleContainer(
+            body=BoxComponent(
+                layout='vertical',
+                spacing='md', # Add some space between components
+                contents=[
+                    # Main Title
+                    TextComponent(text='【糖尿病飲食原則】', weight='bold', size='lg', align='center', margin='md'),
+                    SeparatorComponent(margin='lg'), # Add a line separator
+                    
+                    # Point 1
+                    TextComponent(text='1. 均衡飲食、定時定量：', weight='bold', wrap=True, margin='lg'),
+                    TextComponent(text='這是穩定血糖的基礎，建議諮詢營養師，規劃個人化的飲食計畫，均衡攝取六大類食物，並固定用餐時間與份量。', wrap=True, size='sm', margin='sm'),
+                    
+                    # Point 2
+                    TextComponent(text='2. 控制醣類（碳水化合物）攝取：', weight='bold', wrap=True, margin='lg'),
+                    TextComponent(text='醣類是影響血糖最主要的因素，應學習計算醣類份量，並將總量平均分配於各餐。', wrap=True, size='sm', margin='sm'),
+                    
+                    # Point 3
+                    TextComponent(text='3. 選擇高纖維食物：', weight='bold', wrap=True, margin='lg'),
+                    TextComponent(text='多攝取蔬菜、全穀類（如糙米、燕麥）及適量水果，有助於增加飽足感、穩定血糖。', wrap=True, size='sm', margin='sm'),
 
+                    # Point 4
+                    TextComponent(text='4. 避免精緻糖與加糖食物：', weight='bold', wrap=True, margin='lg'),
+                    TextComponent(text='少喝含糖飲料、少吃甜點、蛋糕、零食等，這些食物易使血糖快速升高，且常含高油脂。', wrap=True, size='sm', margin='sm'),
 
-line_bot_api.push_message('U4af49806ea6bd7091f71f792a2f3247c', TemplateSendMessage(
-    alt_text='ButtonsTemplate',
-    template=ButtonsTemplate(
-        thumbnail_image_url='https://firebasestorage.googleapis.com/v0/b/diabetes-mellitus-linebot.firebasestorage.app/o/Linebot%2F%E7%B3%96%E5%B0%BF%E7%97%85%E6%82%A3%E9%A3%B2%E9%A3%9F.png?alt=media&token=195fd80f-bfb9-48e6-9528-8dd739b3c0b9',
-        title='糖尿病患的飲食',
-        actions=[
-            PostbackAction(
-                label='糖尿病飲食原則',
-                data='糖尿病飲食原則'
-            ),
-            PostbackAction(
-                label='低升糖飲食原則',
-                data='低升糖飲食原則'
-            ),  
-        ]
-    )
-))
+                    # Point 5
+                    TextComponent(text='5. 採低油烹調、選好油：', weight='bold', wrap=True, margin='lg'),
+                    TextComponent(text='多用清蒸、水煮、涼拌、烤、滷等方式。減少油炸、油煎。少吃含飽和脂肪（如肥肉、豬油、奶油）及反式脂肪（如酥油、奶精）的食物，選擇健康的植物油。', wrap=True, size='sm', margin='sm'),
+
+                    # Point 6
+                    TextComponent(text='6. 少鹽、少加工食品：', weight='bold', wrap=True, margin='lg'),
+                    TextComponent(text='減少鹽分攝取，注意加工食品（如香腸、罐頭）的鈉含量。', wrap=True, size='sm', margin='sm'),
+
+                    # Point 7
+                    TextComponent(text='7. 節制飲酒：', weight='bold', wrap=True, margin='lg'),
+                    TextComponent(text='若飲酒需適量，且避免空腹飲酒，以免引起低血糖。', wrap=True, size='sm', margin='sm'),
+
+                    # Point 8
+                    TextComponent(text='8. 維持理想體重：', weight='bold', wrap=True, margin='lg'),
+                    TextComponent(text='體重過重或肥胖者，建議減重以改善血糖、血壓及血脂。', wrap=True, size='sm', margin='sm'),
+                ]
+            )
+        )
+        
+        # --- Send Flex Message ---
+        line_bot_api.reply_message(
+            event.reply_token,
+            FlexSendMessage(
+                alt_text='糖尿病飲食原則', # Fallback text for notifications and unsupported clients
+                contents=bubble
+            )
+        )
+    
+    elif data == "六大類食物與代換原則":
+        # You would need to convert this response to FlexSendMessage as well
+        # ... (similar structure as above, potentially splitting into two Flex Messages)
+        # Example for the first message:
+        bubble1 = BubbleContainer(
+            body=BoxComponent(
+                layout='vertical',
+                spacing='md',
+                contents=[
+                    TextComponent(text='【認識六大類食物】', weight='bold', size='lg', align='center', margin='md'),
+                    SeparatorComponent(margin='lg'),
+                    TextComponent(text='健康飲食應均衡攝取六大類食物，包含：', wrap=True, margin='md'),
+                    # Point 1
+                    TextComponent(text='1. 全穀雜糧類：', weight='bold', wrap=True, margin='lg'),
+                    TextComponent(text='如：米飯、麵食、地瓜、玉米等。', wrap=True, size='sm', margin='sm'),
+                    # Point 2
+                    TextComponent(text='2. 豆魚蛋肉類：', weight='bold', wrap=True, margin='lg'),
+                    TextComponent(text='如：黃豆製品、魚、海鮮、蛋、禽畜肉等。', wrap=True, size='sm', margin='sm'),
+                    # Point 3
+                    TextComponent(text='3. 乳品類：', weight='bold', wrap=True, margin='lg'),
+                    TextComponent(text='如：牛奶、優格、起司等。', wrap=True, size='sm', margin='sm'),
+                    # Point 4
+                    TextComponent(text='4. 蔬菜類：', weight='bold', wrap=True, margin='lg'),
+                    TextComponent(text='如：各種葉菜、菇類、筍類等。', wrap=True, size='sm', margin='sm'),
+                    # Point 5
+                    TextComponent(text='5. 水果類：', weight='bold', wrap=True, margin='lg'),
+                    TextComponent(text='如：各種新鮮水果。', wrap=True, size='sm', margin='sm'),
+                    # Point 6
+                    TextComponent(text='6. 油脂與堅果種子類：', weight='bold', wrap=True, margin='lg'),
+                    TextComponent(text='如：植物油、堅果、種子等。', wrap=True, size='sm', margin='sm'),
+                    
+                    SeparatorComponent(margin='lg'),
+                    TextComponent(text='醣類食物來源：', weight='bold', wrap=True, margin='lg'),
+                    TextComponent(text='主要影響血糖的含醣食物來自 全穀雜糧類、水果類、乳品類。攝取這些食物需注意份量與定時定量。', wrap=True, size='sm', margin='sm'),
+                ]
+            )
+        )
+        # Example for the second message:
+        bubble2 = BubbleContainer(
+             body=BoxComponent(
+                layout='vertical',
+                spacing='md',
+                contents=[
+                    TextComponent(text='【食物代換原則】', weight='bold', size='lg', align='center', margin='md'),
+                    SeparatorComponent(margin='lg'),
+                    TextComponent(text='食物代換原則：', weight='bold', wrap=True, margin='lg'),
+                    TextComponent(text='「相同種類」的食物，只要「份量」相當（通常指醣類含量接近），就可以互相替換，讓飲食更有變化。學習食物代換有助於在固定醣量的前提下，選擇想吃的食物！', wrap=True, size='sm', margin='sm'),
+                    SeparatorComponent(margin='lg'),
+                    TextComponent(text='六大類食物代換份量表：', weight='bold', wrap=True, margin='lg'),
+                    TextComponent(text='https://www.hpa.gov.tw/Pages/Detail.aspx?nodeid=543&pid=8382', wrap=True, size='sm', margin='sm', color='#666666', action={'type': 'uri', 'uri': 'https://www.hpa.gov.tw/Pages/Detail.aspx?nodeid=543&pid=8382'}), # Make link clickable
+                ]
+            )
+        )
+
+        line_bot_api.reply_message(
+            event.reply_token,
+            [
+                FlexSendMessage(alt_text='認識六大類食物', contents=bubble1),
+                FlexSendMessage(alt_text='食物代換原則', contents=bubble2)
+            ]
+        )
+    
+    elif data == "低醣飲食原則":
+        # You would need to convert this response to FlexSendMessage as well
+        # ... (similar structure, splitting into multiple Flex Messages)
+        # Example for the first message:
+        bubble1 = BubbleContainer(
+            body=BoxComponent(
+                layout='vertical',
+                spacing='md',
+                contents=[
+                    TextComponent(text='【低醣飲食原則】', weight='bold', size='lg', align='center', margin='md'),
+                    SeparatorComponent(margin='lg'),
+                    TextComponent(text='低醣飲食就是減少飲食中「醣類」（也就是碳水化合物）的份量。目標是讓身體少一點需要處理的糖份，幫助穩定血糖。這是一種管理糖尿病的飲食方法選擇。', wrap=True, margin='md'),
+                    SeparatorComponent(margin='lg'),
+                    TextComponent(text='要多吃什麼？', weight='bold', size='lg', margin='lg'),
+                    # Point 1
+                    TextComponent(text='1. 大量的蔬菜：', weight='bold', wrap=True, margin='md'),
+                    TextComponent(text='特別是葉菜類（像菠菜、空心菜）、花椰菜、菇類、瓜類等「非」根莖類的蔬菜。', wrap=True, size='sm', margin='sm'),
+                    # Point 2
+                    TextComponent(text='2. 足夠的蛋白質：', weight='bold', wrap=True, margin='md'),
+                    TextComponent(text='像是魚、海鮮、雞蛋、雞肉、瘦肉、豆腐等都是好來源。', wrap=True, size='sm', margin='sm'),
+                    # Point 3
+                    TextComponent(text='3. 健康的脂肪：', weight='bold', wrap=True, margin='md'),
+                    TextComponent(text='可以來自堅果、種子（如芝麻、奇亞籽）、酪梨，以及好的植物油（像橄欖油、苦茶油）。', wrap=True, size='sm', margin='sm'),
+                ]
+            )
+        )
+        # Example for the second message:
+        bubble2 = BubbleContainer(
+            body=BoxComponent(
+                layout='vertical',
+                spacing='md',
+                contents=[
+                    TextComponent(text='要少吃或避免什麼？', weight='bold', size='lg', margin='lg'),
+                    # Point 1
+                    TextComponent(text='1. 主食類要減量：', weight='bold', wrap=True, margin='md'),
+                    TextComponent(text='米飯、麵條、麵包、饅頭、地瓜、馬鈴薯、玉米等都要明顯減少，不管是白米或糙米都一樣。', wrap=True, size='sm', margin='sm'),
+                    # Point 2
+                    TextComponent(text='2. 大部分水果要限制：', weight='bold', wrap=True, margin='md'),
+                    TextComponent(text='因為水果含天然糖分，通常會建議少吃，或只選擇醣量較低的莓果類（如草莓、藍莓）。', wrap=True, size='sm', margin='sm'),
+                    # Point 3
+                    TextComponent(text='3. 豆類要注意：', weight='bold', wrap=True, margin='md'),
+                    TextComponent(text='像紅豆、綠豆、皇帝豆等澱粉含量高的豆類也要少吃。', wrap=True, size='sm', margin='sm'),
+                    # Point 4
+                    TextComponent(text='4. 含糖飲料和甜點：', weight='bold', wrap=True, margin='md'),
+                    TextComponent(text='像是含糖飲料、蛋糕、冰淇淋、甜甜圈等，都要避免。', wrap=True, size='sm', margin='sm'),
+                    
+                    SeparatorComponent(margin='lg'),
+                    TextComponent(text='低醣飲食跟「生酮飲食」一樣嗎？', weight='bold', size='lg', margin='lg'),
+                    TextComponent(text='不太一樣。一般的低醣飲食對醣類的限制，沒有像生酮飲食那麼嚴格 (生酮飲食醣類攝取非常非常少)。', wrap=True, size='sm', margin='sm'),
+                ]
+            )
+        )
+        # Example for the third message:
+        bubble3 = BubbleContainer(
+            body=BoxComponent(
+                layout='vertical',
+                spacing='md',
+                contents=[
+                    TextComponent(text='【低醣飲食的注意事項】', weight='bold', size='lg', margin='lg'),
+                    # Point 1
+                    TextComponent(text='1. 營養均衡：', weight='bold', wrap=True, margin='md'),
+                    TextComponent(text='因為少吃了一些食物種類，要注意營養是不是還均衡。', wrap=True, size='sm', margin='sm'),
+                    # Point 2
+                    TextComponent(text='2. 油脂選擇：', weight='bold', wrap=True, margin='md'),
+                    TextComponent(text='可能會吃比較多肉類和油脂，要聰明選，避免吃太多肥肉或紅肉的脂肪。', wrap=True, size='sm', margin='sm'),
+                    # Point 3
+                    TextComponent(text='3. 諮詢專業：', weight='bold', wrap=True, margin='md'),
+                    TextComponent(
+                        text=' ', # Provide base text or space if needed, spans define the actual content here
+                        wrap=True, size='sm', margin='sm',
+                        contents=[
+                            Span(text='低醣飲食「不是」唯一適合糖尿病的飲食，也不是人人都適合。想嘗試之前，')
+                        ]
+                    ),
+                    TextComponent(
+                        text=' ', # Provide base text or space
+                        wrap=True, size='sm', margin='none', # Removed weight='bold' from TextComponent
+                        contents=[
+                            Span(text='一定要先跟您的醫師或營養師討論，', weight='bold') # Apply bold to the Span
+                        ]
+                    ),
+                     TextComponent(
+                        text=' ', # Provide base text or space
+                        wrap=True, size='sm', margin='none',
+                        contents=[
+                            Span(text='看看您的身體狀況能不能執行，以及怎麼吃才安全又有效喔！')
+                        ]
+                    ),
+                ]
+            )
+        )
+
+        line_bot_api.reply_message(
+            event.reply_token,
+            [
+                FlexSendMessage(alt_text='低醣飲食原則(1/3)', contents=bubble1),
+                FlexSendMessage(alt_text='低醣飲食原則(2/3)', contents=bubble2),
+                FlexSendMessage(alt_text='低醣飲食原則(3/3)', contents=bubble3)
+            ]
+        )
+    
+    # 可以繼續添加更多的 postback 處理邏輯
+    elif data == "返回小知識選單":
+        # 返回小知識選單
+        line_bot_api.reply_message(
+            event.reply_token,
+            TemplateSendMessage(
+                alt_text='糖尿病飲食小知識',
+                template=ButtonsTemplate(
+                    thumbnail_image_url='https://firebasestorage.googleapis.com/v0/b/diabetes-mellitus-linebot.firebasestorage.app/o/Linebot%2F%E7%B3%96%E5%B0%BF%E7%97%85%E6%82%A3%E9%A3%B2%E9%A3%9F.png?alt=media&token=195fd80f-bfb9-48e6-9528-8dd739b3c0b9',
+                    title='糖尿病飲食小知識',
+                    text='了解糖尿病飲食相關知識',
+                    actions=[
+                        PostbackAction(
+                            label='糖尿病飲食原則',
+                            data='糖尿病飲食原則'
+                        ),
+                        PostbackAction(
+                            label='六大類食物與代換原則',
+                            data='六大類食物與代換原則'
+                        ),
+                        PostbackAction(
+                            label='低醣飲食原則',
+                            data='低醣飲食原則'
+                        )
+                    ]
+                )
+            )
+        )
+    
+    # 如果不是特定的 postback 資料，可以記錄下來
+    else:
+        print(f"Received postback: {data}")
