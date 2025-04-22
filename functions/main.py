@@ -7,7 +7,7 @@ from datetime import datetime
 # LineBot import
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
-from linebot.models import (MessageEvent, TextMessage, TextSendMessage, PostbackEvent, PostbackAction, TemplateSendMessage, ButtonsTemplate, FlexSendMessage, BubbleContainer, BoxComponent, TextComponent, SeparatorComponent, Span)
+from linebot.models import (MessageEvent, TextMessage, TextSendMessage, PostbackEvent, PostbackAction, TemplateSendMessage, ButtonsTemplate, FlexSendMessage, BubbleContainer, BoxComponent, TextComponent, SeparatorComponent)
 
 # OpenAI import
 from openai import OpenAI
@@ -522,26 +522,9 @@ def handle_postback(event):
                     # Point 3
                     TextComponent(text='3. 諮詢專業：', weight='bold', wrap=True, margin='md'),
                     TextComponent(
-                        text=' ', # Provide base text or space if needed, spans define the actual content here
+                        text='低醣飲食「不是」唯一適合糖尿病的飲食，也不是人人都適合。想嘗試之前，一定要先跟您的醫師或營養師討論，看看您的身體狀況能不能執行，以及怎麼吃才安全又有效喔！',
                         wrap=True, size='sm', margin='sm',
-                        contents=[
-                            Span(text='低醣飲食「不是」唯一適合糖尿病的飲食，也不是人人都適合。想嘗試之前，')
-                        ]
-                    ),
-                    TextComponent(
-                        text=' ', # Provide base text or space
-                        wrap=True, size='sm', margin='none', # Removed weight='bold' from TextComponent
-                        contents=[
-                            Span(text='一定要先跟您的醫師或營養師討論，', weight='bold') # Apply bold to the Span
-                        ]
-                    ),
-                     TextComponent(
-                        text=' ', # Provide base text or space
-                        wrap=True, size='sm', margin='none',
-                        contents=[
-                            Span(text='看看您的身體狀況能不能執行，以及怎麼吃才安全又有效喔！')
-                        ]
-                    ),
+                    )
                 ]
             )
         )
