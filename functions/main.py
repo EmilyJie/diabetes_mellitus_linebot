@@ -39,7 +39,7 @@ cred = credentials.Certificate(
         "universe_domain": os.getenv('GOOGLE_FIREBASE_CREDENTIALS_UNIVERSE_DOMAIN')
     }
 )
-initialize_app(cred)
+app = initialize_app(cred)
 db = firestore.client()
 
 # LineBot Initialization
