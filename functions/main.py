@@ -99,7 +99,6 @@ def run_assistant(thread_id):
     messages = client.beta.threads.messages.list(thread_id=thread_id)
     return messages.data[0].content[0].text.value
 
-
 def remove_markdown(text):
     # Turn markdown to plain text
     # Remove bold and italic tags
