@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from firebase_admin import initialize_app, credentials, firestore
+from firebase_admin import db as realtime
 
 load_dotenv()
 
@@ -19,5 +20,8 @@ cred = credentials.Certificate({
 })
 
 # 初始化 firebase app
-initialize_app(cred)
+initialize_app(cred, {
+    'databaseURL': os.getenv('GOOGLE_FIREBASE_DATABASE_URL')
+})
 db = firestore.client()
+realtime_db = realtime

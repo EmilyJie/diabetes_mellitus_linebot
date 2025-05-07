@@ -15,7 +15,7 @@ from openai import OpenAI
 # Firebase import
 from firebase_functions import https_fn
 from firebase_admin import firestore
-from firebase import db
+from firebase import db, realtime_db
 
 # Other modules import
 import time
@@ -62,7 +62,7 @@ def run_assistant(thread_id):
 
     # Poll for Run completion
     timeout_counter = 0
-    MAX_RETRIES = 50  # Set maximum retry count
+    MAX_RETRIES = 30  # Set maximum retry count
     while True:
         run_status = client.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run.id)
         if run_status.status == 'completed':
@@ -132,6 +132,16 @@ def handle_message(event):
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     current_date = datetime.now().strftime("%Y/%m/%d")
     print(event.message)
+
+    names_ref = realtime_db.reference('name')
+    names = names_ref.get() or []
+    if display_name in names:
+        message = realtime_db.reference('message').get()
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=message or "您好！糖安心小幫手目前休息中，會盡快回覆您的訊息～")
+        )
+        return
 
     # If user message contains "聯繫研究人員" or "糖安心介紹", just return
     if user_message == "聯繫研究人員" or user_message == "糖安心介紹":
